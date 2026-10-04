@@ -48,6 +48,19 @@ namespace Chronosheet
             this.tabCalendar = new TabPage();
             this.txtDayDetail = new TextBox();
             this.monthCalendar = new MonthCalendar();
+            this.tabSettings = new TabPage();
+            this.chkAutoStart = new CheckBox();
+            this.lblSettingsTitle = new Label();
+            this.lblAutoStartHint = new Label();
+            this.grpMiniAppearance = new GroupBox();
+            this.lblMiniBackColor = new Label();
+            this.btnPickMiniBackColor = new Button();
+            this.pnlMiniBackColorPreview = new Panel();
+            this.lblMiniOpacity = new Label();
+            this.tbMiniOpacity = new TrackBar();
+            this.lblMiniOpacityValue = new Label();
+            this.btnResetMiniAppearance = new Button();
+            this.colorDlgMini = new ColorDialog();
             this.tmrTick = new Timer(this.components);
             this.tabControl.SuspendLayout();
             this.tabTimer.SuspendLayout();
@@ -57,12 +70,14 @@ namespace Chronosheet
             this.tabRecords.SuspendLayout();
             ((ISupportInitialize)(this.dgvRecords)).BeginInit();
             this.tabCalendar.SuspendLayout();
+            this.tabSettings.SuspendLayout();
             this.SuspendLayout();
 
             // tabControl
             this.tabControl.Controls.Add(this.tabTimer);
             this.tabControl.Controls.Add(this.tabRecords);
             this.tabControl.Controls.Add(this.tabCalendar);
+            this.tabControl.Controls.Add(this.tabSettings);
             this.tabControl.Dock = DockStyle.Fill;
             this.tabControl.Font = new Font("Microsoft YaHei UI", 9F);
             this.tabControl.Location = new Point(0, 0);
@@ -407,6 +422,152 @@ namespace Chronosheet
             this.txtDayDetail.Size = new Size(436, 486);
             this.txtDayDetail.TabIndex = 1;
 
+            // tabSettings - 设置
+            this.tabSettings.BackColor = Color.White;
+            this.tabSettings.Controls.Add(this.grpMiniAppearance);
+            this.tabSettings.Controls.Add(this.lblAutoStartHint);
+            this.tabSettings.Controls.Add(this.chkAutoStart);
+            this.tabSettings.Controls.Add(this.lblSettingsTitle);
+            this.tabSettings.Location = new Point(4, 31);
+            this.tabSettings.Name = "tabSettings";
+            this.tabSettings.Padding = new Padding(3);
+            this.tabSettings.Size = new Size(776, 526);
+            this.tabSettings.TabIndex = 3;
+            this.tabSettings.Text = "设置";
+
+            // lblSettingsTitle
+            this.lblSettingsTitle.AutoSize = true;
+            this.lblSettingsTitle.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Bold);
+            this.lblSettingsTitle.ForeColor = Color.FromArgb(45, 55, 72);
+            this.lblSettingsTitle.Location = new Point(30, 30);
+            this.lblSettingsTitle.Name = "lblSettingsTitle";
+            this.lblSettingsTitle.Size = new Size(74, 27);
+            this.lblSettingsTitle.TabIndex = 0;
+            this.lblSettingsTitle.Text = "常规设置";
+
+            // chkAutoStart
+            this.chkAutoStart.AutoSize = true;
+            this.chkAutoStart.Font = new Font("Microsoft YaHei UI", 10F);
+            this.chkAutoStart.Location = new Point(40, 85);
+            this.chkAutoStart.Name = "chkAutoStart";
+            this.chkAutoStart.Size = new Size(169, 27);
+            this.chkAutoStart.TabIndex = 1;
+            this.chkAutoStart.Text = "开机时自动启动 Chronosheet";
+            this.chkAutoStart.UseVisualStyleBackColor = true;
+            this.chkAutoStart.CheckedChanged += new System.EventHandler(this.chkAutoStart_CheckedChanged);
+
+            // lblAutoStartHint
+            this.lblAutoStartHint.AutoSize = true;
+            this.lblAutoStartHint.Font = new Font("Microsoft YaHei UI", 9F);
+            this.lblAutoStartHint.ForeColor = Color.FromArgb(113, 128, 150);
+            this.lblAutoStartHint.Location = new Point(62, 120);
+            this.lblAutoStartHint.Name = "lblAutoStartHint";
+            this.lblAutoStartHint.MaximumSize = new Size(600, 0);
+            this.lblAutoStartHint.TabIndex = 2;
+            this.lblAutoStartHint.Text = "开启后，Windows 登录时会自动启动本程序。仅对当前用户生效，无需管理员权限。可随时在此处关闭，或在任务管理器「启动」标签页中管理。";
+
+            // grpMiniAppearance - 迷你模式外观分组
+            this.grpMiniAppearance.BackColor = Color.White;
+            this.grpMiniAppearance.Controls.Add(this.btnResetMiniAppearance);
+            this.grpMiniAppearance.Controls.Add(this.lblMiniOpacityValue);
+            this.grpMiniAppearance.Controls.Add(this.tbMiniOpacity);
+            this.grpMiniAppearance.Controls.Add(this.lblMiniOpacity);
+            this.grpMiniAppearance.Controls.Add(this.pnlMiniBackColorPreview);
+            this.grpMiniAppearance.Controls.Add(this.btnPickMiniBackColor);
+            this.grpMiniAppearance.Controls.Add(this.lblMiniBackColor);
+            this.grpMiniAppearance.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold);
+            this.grpMiniAppearance.ForeColor = Color.FromArgb(45, 55, 72);
+            this.grpMiniAppearance.Location = new Point(30, 170);
+            this.grpMiniAppearance.Name = "grpMiniAppearance";
+            this.grpMiniAppearance.Size = new Size(716, 180);
+            this.grpMiniAppearance.TabIndex = 3;
+            this.grpMiniAppearance.TabStop = false;
+            this.grpMiniAppearance.Text = "迷你模式外观";
+
+            // lblMiniBackColor
+            this.lblMiniBackColor.AutoSize = true;
+            this.lblMiniBackColor.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular);
+            this.lblMiniBackColor.ForeColor = Color.FromArgb(45, 55, 72);
+            this.lblMiniBackColor.Location = new Point(20, 40);
+            this.lblMiniBackColor.Name = "lblMiniBackColor";
+            this.lblMiniBackColor.Size = new Size(74, 20);
+            this.lblMiniBackColor.TabIndex = 0;
+            this.lblMiniBackColor.Text = "背景颜色：";
+
+            // btnPickMiniBackColor
+            this.btnPickMiniBackColor.BackColor = Color.FromArgb(102, 126, 234);
+            this.btnPickMiniBackColor.FlatAppearance.BorderSize = 0;
+            this.btnPickMiniBackColor.FlatStyle = FlatStyle.Flat;
+            this.btnPickMiniBackColor.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
+            this.btnPickMiniBackColor.ForeColor = Color.White;
+            this.btnPickMiniBackColor.Location = new Point(100, 36);
+            this.btnPickMiniBackColor.Name = "btnPickMiniBackColor";
+            this.btnPickMiniBackColor.Size = new Size(110, 32);
+            this.btnPickMiniBackColor.TabIndex = 1;
+            this.btnPickMiniBackColor.Text = "选择颜色";
+            this.btnPickMiniBackColor.UseVisualStyleBackColor = false;
+            this.btnPickMiniBackColor.Click += new System.EventHandler(this.btnPickMiniBackColor_Click);
+
+            // pnlMiniBackColorPreview - 颜色预览框
+            this.pnlMiniBackColorPreview.BackColor = Color.FromArgb(45, 55, 72);
+            this.pnlMiniBackColorPreview.BorderStyle = BorderStyle.FixedSingle;
+            this.pnlMiniBackColorPreview.Location = new Point(220, 36);
+            this.pnlMiniBackColorPreview.Name = "pnlMiniBackColorPreview";
+            this.pnlMiniBackColorPreview.Size = new Size(40, 32);
+            this.pnlMiniBackColorPreview.TabIndex = 2;
+
+            // lblMiniOpacity
+            this.lblMiniOpacity.AutoSize = true;
+            this.lblMiniOpacity.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular);
+            this.lblMiniOpacity.ForeColor = Color.FromArgb(45, 55, 72);
+            this.lblMiniOpacity.Location = new Point(20, 92);
+            this.lblMiniOpacity.Name = "lblMiniOpacity";
+            this.lblMiniOpacity.Size = new Size(74, 20);
+            this.lblMiniOpacity.TabIndex = 3;
+            this.lblMiniOpacity.Text = "不透明度：";
+
+            // tbMiniOpacity - 30(%) ~ 100(%) 对应实际 Opacity 0.3 ~ 1.0
+            this.tbMiniOpacity.AutoSize = false;
+            this.tbMiniOpacity.LargeChange = 5;
+            this.tbMiniOpacity.Location = new Point(100, 86);
+            this.tbMiniOpacity.Maximum = 100;
+            this.tbMiniOpacity.Minimum = 30;
+            this.tbMiniOpacity.Name = "tbMiniOpacity";
+            this.tbMiniOpacity.Size = new Size(480, 40);
+            this.tbMiniOpacity.SmallChange = 1;
+            this.tbMiniOpacity.TabIndex = 4;
+            this.tbMiniOpacity.TickFrequency = 5;
+            this.tbMiniOpacity.TickStyle = TickStyle.BottomRight;
+            this.tbMiniOpacity.Value = 100;
+            this.tbMiniOpacity.Scroll += new System.EventHandler(this.tbMiniOpacity_Scroll);
+
+            // lblMiniOpacityValue - 右侧百分值
+            this.lblMiniOpacityValue.AutoSize = true;
+            this.lblMiniOpacityValue.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
+            this.lblMiniOpacityValue.ForeColor = Color.FromArgb(102, 126, 234);
+            this.lblMiniOpacityValue.Location = new Point(588, 92);
+            this.lblMiniOpacityValue.Name = "lblMiniOpacityValue";
+            this.lblMiniOpacityValue.Size = new Size(47, 20);
+            this.lblMiniOpacityValue.TabIndex = 5;
+            this.lblMiniOpacityValue.Text = "100 %";
+
+            // btnResetMiniAppearance
+            this.btnResetMiniAppearance.BackColor = Color.FromArgb(160, 174, 192);
+            this.btnResetMiniAppearance.FlatAppearance.BorderSize = 0;
+            this.btnResetMiniAppearance.FlatStyle = FlatStyle.Flat;
+            this.btnResetMiniAppearance.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
+            this.btnResetMiniAppearance.ForeColor = Color.White;
+            this.btnResetMiniAppearance.Location = new Point(100, 136);
+            this.btnResetMiniAppearance.Name = "btnResetMiniAppearance";
+            this.btnResetMiniAppearance.Size = new Size(150, 32);
+            this.btnResetMiniAppearance.TabIndex = 6;
+            this.btnResetMiniAppearance.Text = "恢复默认外观";
+            this.btnResetMiniAppearance.UseVisualStyleBackColor = false;
+            this.btnResetMiniAppearance.Click += new System.EventHandler(this.btnResetMiniAppearance_Click);
+
+            // 把 grpMiniAppearance 加进 tabSettings 的 Controls（在 tabSettings 的初始化中已加过一次，这里明确声明）
+            this.tabSettings.Controls.Add(this.grpMiniAppearance);
+
             // tmrTick
             this.tmrTick.Interval = 1000;
             this.tmrTick.Tick += new System.EventHandler(this.tmrTick_Tick);
@@ -435,6 +596,8 @@ namespace Chronosheet
             ((ISupportInitialize)(this.dgvRecords)).EndInit();
             this.tabCalendar.ResumeLayout(false);
             this.tabCalendar.PerformLayout();
+            this.tabSettings.ResumeLayout(false);
+            this.tabSettings.PerformLayout();
             this.ResumeLayout(false);
         }
 
@@ -444,6 +607,7 @@ namespace Chronosheet
         private TabPage tabTimer;
         private TabPage tabRecords;
         private TabPage tabCalendar;
+        private TabPage tabSettings;
 
         // Tab 1 计时器
         private RadioButton rdoCountup;
@@ -475,5 +639,19 @@ namespace Chronosheet
         // Tab 3 日历视图
         private MonthCalendar monthCalendar;
         private TextBox txtDayDetail;
+
+        // Tab 4 设置
+        private CheckBox chkAutoStart;
+        private Label lblSettingsTitle;
+        private Label lblAutoStartHint;
+        private GroupBox grpMiniAppearance;
+        private Label lblMiniBackColor;
+        private Button btnPickMiniBackColor;
+        private Panel pnlMiniBackColorPreview;
+        private Label lblMiniOpacity;
+        private TrackBar tbMiniOpacity;
+        private Label lblMiniOpacityValue;
+        private Button btnResetMiniAppearance;
+        private ColorDialog colorDlgMini;
     }
 }

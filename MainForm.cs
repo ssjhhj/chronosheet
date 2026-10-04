@@ -28,6 +28,9 @@ namespace Chronosheet
         // ===== 迷你计时器窗口 =====
         private MiniTimerForm? _miniForm;
 
+        // ===== 设置 =====
+        private AppSettings _appSettings = null!;
+
         public MainForm()
         {
             InitializeComponent();
@@ -35,6 +38,13 @@ namespace Chronosheet
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            _appSettings = AppSettings.Load();
+
+            chkAutoStart.Checked = _appSettings.AutoStartOnBoot;
+
+            // 设置页：迷你模式外观回填
+            SyncMiniAppearanceControlsFromSettings();
+
             InitDataGridViewRows();
             dtpDate.Value = DateTime.Today;
             LoadDailyRecords(dtpDate.Value);
@@ -42,6 +52,21 @@ namespace Chronosheet
             RefreshCalendarDetail(DateTime.Today);
             UpdateCountdownInputsVisibility();
             UpdateTimerDisplay();
+        }
+
+        /// <summary>
+        /// 把 AppSettings 里的迷你外观同步到设置页控件（不触发 Scroll/CheckedChanged 等事件）
+        /// </summary>
+        private void SyncMiniAppearanceControlsFromSettings()
+        {
+            pnlMiniBackColorPreview.BackColor = _appSettings.MiniBackColor;
+
+            // 滑条 30..100 对应 Opacity 0.3..1.0：双向换算 Opacity*100 夹紧
+            int pct = (int)Math.Round(_appSettings.MiniOpacity * 100.0);
+            if (pct < tbMiniOpacity.Minimum) pct = tbMiniOpacity.Minimum;
+            if (pct > tbMiniOpacity.Maximum) pct = tbMiniOpacity.Maximum;
+            tbMiniOpacity.Value = pct;
+            lblMiniOpacityValue.Text = $"{pct} %";
         }
 
         #region ===== Tab 1：计时器 =====
@@ -182,6 +207,17 @@ namespace Chronosheet
         internal bool TimerIsRunning => _isRunning;
         internal bool TimerIsCountdown => rdoCountdown.Checked;
 
+        /// <summary>
+        /// 给迷你窗调用：开始/暂停切换（根据当前状态自动调用 Start 或 Pause）
+        /// </summary>
+        internal void ToggleTimerStartPause()
+        {
+            if (_isRunning)
+                btnPause_Click(this, EventArgs.Empty);
+            else
+                btnStart_Click(this, EventArgs.Empty);
+        }
+
         private void UpdateTimerDisplay()
         {
             string text = GetTimerDisplayText();
@@ -203,16 +239,29 @@ namespace Chronosheet
             }
             _miniForm = new MiniTimerForm(this);
             _miniForm.FormClosed += (s, _) => { _miniForm = null; };
-            _miniForm.Show(this);
-            // 把迷你窗口定位到主窗体右上角外面
-            if (this.WindowState != FormWindowState.Minimized)
+
+            // 首次创建时：在主窗右上角外侧（若主窗可见）；否则在屏幕居中
+            Rectangle area = Screen.FromControl(this).WorkingArea;
+            if (this.Visible && this.WindowState != FormWindowState.Minimized)
             {
-                _miniForm.Location = new Point(this.Right - _miniForm.Width - 20, this.Top + 20);
+                int x = this.Right - _miniForm.Width - 20;
+                int y = this.Top + 20;
+                // 夹到工作区内，避免跑出屏幕
+                x = Math.Max(area.Left, Math.Min(x, area.Right - _miniForm.Width));
+                y = Math.Max(area.Top, Math.Min(y, area.Bottom - _miniForm.Height));
+                _miniForm.Location = new Point(x, y);
+                _miniForm.StartPosition = FormStartPosition.Manual;
             }
             else
             {
                 _miniForm.StartPosition = FormStartPosition.CenterScreen;
             }
+
+            _miniForm.Show(this);
+
+            // Show 之后立刻应用外观设置（MiniTimerForm.Load 里已经从 AppSettings.Load 过，但这里再次同步保证最新）
+            _miniForm.ApplySettings(_appSettings);
+
             UpdateTimerDisplay();
         }
 
@@ -659,6 +708,76 @@ namespace Chronosheet
             txtDayDetail.Text = string.Join("\r\n", lines);
             txtDayDetail.SelectionStart = 0;
             txtDayDetail.SelectionLength = 0;
+        }
+
+        #endregion
+
+        #region ===== Tab 4：设置 =====
+
+        private void chkAutoStart_CheckedChanged(object? sender, EventArgs e)
+        {
+            bool want = chkAutoStart.Checked;
+
+            bool ok = _appSettings.SetAutoStart(want);
+            if (!ok)
+            {
+                MessageBox.Show(
+                    "设置开机自启动失败，可能是注册表访问被阻止。",
+                    "设置失败",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                chkAutoStart.CheckedChanged -= chkAutoStart_CheckedChanged;
+                chkAutoStart.Checked = _appSettings.AutoStartOnBoot;
+                chkAutoStart.CheckedChanged += chkAutoStart_CheckedChanged;
+                return;
+            }
+        }
+
+        // ===== 迷你模式外观：选择背景颜色 =====
+        private void btnPickMiniBackColor_Click(object? sender, EventArgs e)
+        {
+            colorDlgMini.AllowFullOpen = true;
+            colorDlgMini.FullOpen = true;
+            colorDlgMini.AnyColor = true;
+            colorDlgMini.Color = _appSettings.MiniBackColor;
+            if (colorDlgMini.ShowDialog(this) != DialogResult.OK) return;
+
+            Color picked = colorDlgMini.Color;
+            _appSettings.MiniBackColor = picked;
+            pnlMiniBackColorPreview.BackColor = picked;
+            ApplyMiniAppearanceAndSave();
+        }
+
+        // ===== 迷你模式外观：不透明度滑条 =====
+        private void tbMiniOpacity_Scroll(object? sender, EventArgs e)
+        {
+            int pct = tbMiniOpacity.Value;
+            if (pct < 30) pct = 30; else if (pct > 100) pct = 100;
+            double op = pct / 100.0;
+            _appSettings.MiniOpacity = op;
+            lblMiniOpacityValue.Text = $"{pct} %";
+            ApplyMiniAppearanceAndSave();
+        }
+
+        // ===== 迷你模式外观：恢复默认 =====
+        private void btnResetMiniAppearance_Click(object? sender, EventArgs e)
+        {
+            Color defaultColor = Color.FromArgb(45, 55, 72);
+            const double defaultOpacity = 1.0;
+            _appSettings.MiniBackColor = defaultColor;
+            _appSettings.MiniOpacity = defaultOpacity;
+            SyncMiniAppearanceControlsFromSettings();
+            ApplyMiniAppearanceAndSave();
+        }
+
+        /// <summary>
+        /// 保存设置到 JSON；如果迷你窗已打开，则实时把外观应用过去
+        /// </summary>
+        private void ApplyMiniAppearanceAndSave()
+        {
+            _appSettings.Save();
+            if (_miniForm != null && !_miniForm.IsDisposed)
+                _miniForm.ApplySettings(_appSettings);
         }
 
         #endregion
